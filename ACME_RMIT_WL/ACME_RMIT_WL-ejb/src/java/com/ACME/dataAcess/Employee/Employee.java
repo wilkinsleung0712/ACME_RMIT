@@ -13,8 +13,7 @@ import java.sql.Timestamp;
  * @author WEIQIANGLIANG
  */
 public class Employee {
-    private int id;
-    private String e_id;
+    private int e_id;
     private String password;
     private String firstname;
     private String lastname;
@@ -23,20 +22,14 @@ public class Employee {
     public Employee() {
     }
 
-    public int getId() {
-        return id;
-    }
+  
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getE_id() {
+    public int getE_id() {
         return e_id;
     }
 
     public void setE_id(int e_id) {
-        this.e_id = "E_"+String.valueOf(e_id);
+        this.e_id = e_id;
     }
 
     public String getPassword() {

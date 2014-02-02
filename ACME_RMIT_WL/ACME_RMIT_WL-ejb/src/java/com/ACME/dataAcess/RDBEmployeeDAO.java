@@ -25,7 +25,9 @@ private final String SQL_UPDATE_E_ID_EMPLOYEE="UPDATE ACME_BANK.EMPLOYEE SET E_I
 private final String SQL_READ_EMPLOYEE="SELECT * FROM ACME_BANK.EMPLOYEE WHERE E_ID = ?";
 private final String SQL_UPDATE_EMPLOYEE="UPDATE ACME_BANK.EMPLOYEE SET FIRSTNAME=?, LASTNAME=? WHERE E_ID=?";
 private final String SQL_DELETE_EMPLOYEE="DELTE FROM ACME_BANK.EMPLOYEE WHERE E_ID=?";
-
+//
+private final boolean SUCCESS=true;
+private final boolean FAIL=false;
     public RDBEmployeeDAO(Connection dbConnection) {
         this.dbConnection=dbConnection;
     }
@@ -34,49 +36,56 @@ private final String SQL_DELETE_EMPLOYEE="DELTE FROM ACME_BANK.EMPLOYEE WHERE E_
     
 
     @Override
-    public void createEmployee(Employee employee) {
+    public boolean createEmployee(Employee employee) {
         try {
-            PreparedStatement prestmnt=dbConnection.prepareStatement(SQL_CREATE_EMPLOYEE,Statement.RETURN_GENERATED_KEYS);
+            if(!readEmployeeById(employee.getE_id())){
+                PreparedStatement prestmnt=dbConnection.prepareStatement(SQL_CREATE_EMPLOYEE,Statement.RETURN_GENERATED_KEYS);
 
-            prestmnt.setString(1, employee.getFirstname());
-            prestmnt.setString(2, employee.getLastname());
-            prestmnt.setString(3, employee.getPassword());
+                prestmnt.setString(1, employee.getFirstname());
+                prestmnt.setString(2, employee.getLastname());
+                prestmnt.setString(3, employee.getPassword());
 
-            prestmnt.executeUpdate();
-
-            ResultSet rs=prestmnt.getGeneratedKeys();
-            rs.next();
-            
-            employee.setE_id(rs.getInt("ID"));
-            
-            //update employee to format e_id 
-            PreparedStatement prestmnt_eid=dbConnection.prepareStatement(SQL_UPDATE_E_ID_EMPLOYEE);
-            prestmnt_eid.setString(1, employee.getE_id());
-            prestmnt_eid.setInt(2, employee.getId());
-            
-            prestmnt_eid.executeQuery();
-            
-            
-        
+                prestmnt.executeUpdate();
+                return SUCCESS;
+            }
         } catch (SQLException ex) {
            System.out.println("Could not add new employee.");
            
         }
-    
+        return FAIL;
     }
+    
+    public boolean readEmployeeById(int E_ID){
+        boolean isExisted=FAIL;
+         try {
+            PreparedStatement prestmnt=dbConnection.prepareStatement(SQL_READ_EMPLOYEE);
 
+            prestmnt.setInt(1, E_ID);
+            prestmnt.executeUpdate();
+            ResultSet rs=prestmnt.executeQuery();
+            if(rs.next()){
+                isExisted=SUCCESS;
+                return isExisted;
+            }
+        } catch (SQLException ex) {
+           System.out.println("Could not add new employee.");
+           
+        }
+        return isExisted;
+    }
+    
     @Override
     public Employee readEmployee(String E_ID) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void updateEmployee(Employee employee) {
+    public boolean updateEmployee(Employee employee) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void deleteEmployee(String E_ID) {
+    public boolean deleteEmployee(String E_ID) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

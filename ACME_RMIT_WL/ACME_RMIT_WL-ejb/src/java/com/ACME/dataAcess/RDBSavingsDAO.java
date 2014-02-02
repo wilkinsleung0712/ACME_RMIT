@@ -7,6 +7,7 @@
 package com.ACME.dataAcess;
 
 import com.ACME.dataAcess.DAO.SavingsDAO;
+import com.ACME.dataAcess.DAO.TransactionsDAO;
 import com.ACME.dataAcess.Savings.Savings;
 import com.ACME.dataAcess.Transactions.Transactions;
 import java.sql.Connection;
@@ -25,13 +26,18 @@ public class RDBSavingsDAO implements SavingsDAO{
 private  Connection dbConnection=null;
 private final String SQL_CREATE_SAVINGS="INSERT INTO ACME_BANK.SAVINGS( C_ID, BALANCE)"+ " VALUES ( ?, ?)";
 private final String SQL_READ_SAVINGS="SELECT * FROM ACME_BANK.SAVINGS WHERE C_ID = ?";
+private final String SQL_READ_SAVINGS_BY_ACCNUM="SELECT * FROM ACME_BANK.SAVINGS WHERE ACCNUM = ?";
 private final String SQL_GETALL_SAVINGS="SELECT * FROM ACME_BANK.SAVINGS";
-private final String SQL_UPDATE_SAVINGS="UPDATE ACME_BANK.SAVINGS SET ACCNUM=?, BALANCE=? WHERE C_ID=?";
-private final String SQL_DELETE_SAVINGS="DELTE FROM ACME_BANK.SAVINGS WHERE C_ID=?";
-private final String SQL_VIEW_BALANCE="SELECT BALANCE FROM ACME_BANK.SAVINGS WHERE C_ID=?";
-private final String SQL_SET_BALANCE="UPDATE  ACME_BANK.SAVINGS SET BALANCE=? WHERE C_ID=?";
-    
+private final String SQL_UPDATE_SAVINGS="UPDATE ACME_BANK.SAVINGS SET ACCNUM=?, BALANCE=? WHERE ACCNUM=?";
+private final String SQL_DELETE_SAVINGS="DELTE FROM ACME_BANK.SAVINGS WHERE ACCNUM=?";
+private final String SQL_VIEW_BALANCE="SELECT BALANCE FROM ACME_BANK.SAVINGS WHERE ACCNUM=?";
+private final String SQL_SET_BALANCE="UPDATE  ACME_BANK.SAVINGS SET BALANCE=? WHERE ACCNUM=?";
+//constraint
+private final boolean SUCCESS=true;
+private final boolean FAIL=false;
+
     public RDBSavingsDAO(Connection dbConnection) {
+         this.dbConnection = dbConnection; 
     }
 
     @Override
@@ -52,8 +58,8 @@ private final String SQL_SET_BALANCE="UPDATE  ACME_BANK.SAVINGS SET BALANCE=? WH
     }
 
     @Override
-    public Savings readSavingsAccount(int C_ID) {
-        SavingsAccount account=null;
+    public boolean readSavingsAccountByCustomer(int C_ID) {
+         boolean savingsExist=FAIL;
         try{
             PreparedStatement prestmnt=dbConnection.prepareStatement(SQL_READ_SAVINGS);
             
@@ -61,130 +67,154 @@ private final String SQL_SET_BALANCE="UPDATE  ACME_BANK.SAVINGS SET BALANCE=? WH
             
             ResultSet rs=prestmnt.executeQuery();
             
-            rs.next();
-            
-            account=new SavingsAccount(rs.getInt("C_ID"));
-            account.setAccNum(rs.getString("ACCNUM"));
-            account.setBalance(rs.getInt("BALANCE"));
-            
-            
-            
-        }catch(Exception ex){
-            System.out.println("Could not find a saving account for customer. "+C_ID);
+            if(rs.next()){
+                savingsExist=SUCCESS;
+            }
+        }catch(SQLException ex){
+            System.out.println("Error find a saving account for customer. "+C_ID);
             ex.printStackTrace();
         }
-        return account;
+        return savingsExist;
     }
 
     @Override
-    public void updateSavingsAccount(int C_ID) {
+    public boolean readSavingsAccountByAccNum(int AccNum) {
+         boolean savingsExist=FAIL;
+        try{
+            PreparedStatement prestmnt=dbConnection.prepareStatement(SQL_READ_SAVINGS_BY_ACCNUM);
+            
+            prestmnt.setInt(1,AccNum);
+            
+            ResultSet rs=prestmnt.executeQuery();
+            
+            if(rs.next()){
+                savingsExist=SUCCESS;
+            }
+        }catch(SQLException ex){
+            System.out.println("Error find a saving account for customer. "+AccNum);
+            ex.printStackTrace();
+        }
+        return savingsExist;
+    }
+    
+    
+    @Override
+    public Savings getSavingsAccountByAccNum(int AccNum){
+        Savings account=null;
          try{
-           PreparedStatement prestmnt=dbConnection.prepareStatement(SQL_DELETE_SAVINGS);
-           
-           prestmnt.setInt(1, C_ID);
-           
-           prestmnt.executeUpdate();
-           
-           
-       }catch(Exception ex){
-           System.out.println("Could not delete a savings account for customer. "+C_ID);
+             if(readSavingsAccountByAccNum(AccNum)){
+                 PreparedStatement prestmnt=dbConnection.prepareStatement(SQL_READ_SAVINGS_BY_ACCNUM);
+
+                    prestmnt.setInt(1,AccNum);
+
+                    ResultSet rs=prestmnt.executeQuery();
+                    if(rs.next()){
+                        account=new Savings();
+                        account.setAccNum(AccNum);
+                        account.setBalance(rs.getInt("Balance"));
+                        account.setC_id(rs.getInt("C_ID"));
+                    }
+             }
+        }catch(SQLException ex){
+            System.out.println("Error find a saving account for customer. "+AccNum);
+            ex.printStackTrace();
+        }
+         return account;
+    }
+    
+    @Override
+    public boolean updateSavingsAccount(Savings savingsAccount) {
+         try{
+             if(readSavingsAccountByAccNum(savingsAccount.getAccNum())){
+                  PreparedStatement prestmnt=dbConnection.prepareStatement(SQL_UPDATE_SAVINGS);
+                  prestmnt.setInt(1, savingsAccount.getAccNum());
+                  prestmnt.setInt(2, savingsAccount.getBalance());
+                  prestmnt.setInt(3, savingsAccount.getC_id());
+                  prestmnt.executeUpdate();
+                  return SUCCESS;
+             }
+          }catch(Exception ex){
+           System.out.println("Could not delete a savings account for customer. ");
            ex.printStackTrace();
        }
+         return FAIL;
     }
 
     @Override
-    public void deleteSavingsAccount(int C_ID) {
-        boolean withdrawflag=false;
-        String accNum="S"+C_ID;
-        String description="Customer ID: ["+C_ID+"], AccNum: ["+accNum+"]"+" withdrawed "+amount+" on "+System.currentTimeMillis()+" Success: ";
+    public boolean deleteSavingsAccount(int AccNum) {
         try{
-           SavingsAccount account = readSavingsAccount(C_ID);
-           
-           
-           withdrawflag=account.withdraw(amount);
+            if(readSavingsAccountByAccNum(AccNum)){
+                 PreparedStatement prestmnt=dbConnection.prepareStatement(SQL_DELETE_SAVINGS);
+                 prestmnt.setInt(1, AccNum);
+                  prestmnt.executeUpdate();
+                  return SUCCESS;
+             }
+       }catch(Exception ex){
+           System.out.println("Could not delete a savings account for customer. "+AccNum);
+           ex.printStackTrace();
+       }
+            return FAIL;
+    }
+
+    @Override
+    public void withdraw(int AccNum, int amount) {
+        boolean withdrawflag=FAIL;
+        String description="AccNum: ["+AccNum+"]"+" withdrawed "+amount+" on "+System.currentTimeMillis()+" Result: ";
+        try{
+           Savings account = getSavingsAccountByAccNum(AccNum);
+           withdrawflag=account.withDraw(amount);
            if(withdrawflag){
                PreparedStatement prestmnt=dbConnection.prepareStatement(SQL_SET_BALANCE);
                prestmnt.setInt(1, account.getBalance());
-               prestmnt.setInt(2, account.getC_ID());
+               prestmnt.setInt(2, account.getAccNum());
                prestmnt.executeUpdate();
                
-               
-               
            }else{
-               System.out.println("Insufficient fund on Account. "+C_ID);
+               System.out.println("Insufficient fund on Account. "+AccNum);
            }
         }catch(Exception ex){
-            System.out.println("Could not withdraw on Account. "+C_ID);
+            System.out.println("Could not withdraw on Account. "+AccNum);
             ex.printStackTrace();
         }finally{
-            RDBTransactionsDAO transaction=new RDBTransactionsDAO(dbConnection);
+            TransactionsDAO transaction=new RDBTransactionsDAO(dbConnection);
             description+=String.valueOf(withdrawflag);
-            transaction.createTranscations(new Transactions(C_ID,accNum,amount,description));
+           // transaction.createTranscations(new Transactions(C_ID,accNum,amount,description));
         }
     }
 
     @Override
-    public void withdraw(int C_ID, int amount) {
-        boolean withdrawflag=false;
-        String accNum="S"+C_ID;
-        String description="Customer ID: ["+C_ID+"], AccNum: ["+accNum+"]"+" withdrawed "+amount+" on "+System.currentTimeMillis()+" Success: ";
+    public boolean deposit(int AccNum, int amount) {
+        boolean deposit=FAIL;
+        String description=" AccNum: ["+AccNum+"]"+" deposit "+amount+" on "+System.currentTimeMillis()+" Success: ";
         try{
-           SavingsAccount account = readSavingsAccount(C_ID);
-           
-           
-           withdrawflag=account.withdraw(amount);
-           if(withdrawflag){
+            if(readSavingsAccountByAccNum(AccNum)){
+                Savings account = getSavingsAccountByAccNum(AccNum);
+                account.deposit(amount);
                PreparedStatement prestmnt=dbConnection.prepareStatement(SQL_SET_BALANCE);
                prestmnt.setInt(1, account.getBalance());
-               prestmnt.setInt(2, account.getC_ID());
+               prestmnt.setInt(2, account.getAccNum());
                prestmnt.executeUpdate();
-               
-               
-               
-           }else{
-               System.out.println("Insufficient fund on Account. "+C_ID);
-           }
+               deposit=SUCCESS;
+               return deposit;
+            }
         }catch(Exception ex){
-            System.out.println("Could not withdraw on Account. "+C_ID);
-            ex.printStackTrace();
-        }finally{
-            RDBTransactionsDAO transaction=new RDBTransactionsDAO(dbConnection);
-            description+=String.valueOf(withdrawflag);
-            transaction.createTranscations(new Transactions(C_ID,accNum,amount,description));
-        }
-    }
-
-    @Override
-    public void deposit(int C_ID, int amount) {
-        String accNum="S"+C_ID;
-        boolean deposit=true;
-        String description="Customer ID: ["+C_ID+"], AccNum: ["+accNum+"]"+" deposit "+amount+" on "+System.currentTimeMillis()+" Success: ";
-        try{
-            
-           SavingsAccount account = readSavingsAccount(C_ID);
-           account.deposit(amount);
-               PreparedStatement prestmnt=dbConnection.prepareStatement(SQL_SET_BALANCE);
-               prestmnt.setInt(1, account.getBalance());
-               prestmnt.setInt(2, account.getC_ID());
-               prestmnt.executeUpdate();
-          
-        }catch(Exception ex){
-            System.out.println("Could not deposit on Account. "+C_ID);
+            System.out.println("Could not deposit on Account. "+AccNum);
             ex.printStackTrace();
         }finally{
             RDBTransactionsDAO transaction=new RDBTransactionsDAO(dbConnection);
             description+=String.valueOf(deposit);
-            transaction.createTranscations(new Transactions(C_ID,accNum,amount,description));
+           // transaction.createTranscations(new Transactions(C_ID,accNum,amount,description));
         }
+         return deposit;
     }
 
     @Override
-    public int viewBalance(int C_ID) {
+    public int viewBalance(int AccNum) {
          int balance = -1;
         try{
            PreparedStatement prestmnt=dbConnection.prepareStatement(SQL_VIEW_BALANCE);
            
-           prestmnt.setInt(1, C_ID);
+           prestmnt.setInt(1, AccNum);
            
            ResultSet rs=prestmnt.executeQuery();
            
@@ -193,7 +223,7 @@ private final String SQL_SET_BALANCE="UPDATE  ACME_BANK.SAVINGS SET BALANCE=? WH
            balance=rs.getInt("BALANCE");
            
         }catch(Exception ex){
-            System.out.println("Could not view balance on a savings account for customer. "+C_ID);
+            System.out.println("Could not view balance on a savings account for customer. "+AccNum);
             ex.printStackTrace();
         }
          return balance;

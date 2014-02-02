@@ -13,9 +13,9 @@ import com.ACME.dataAcess.Employee.Employee;
  * @author WEIQIANGLIANG
  */
 public interface EmployeeDAO {
-    public void createEmployee(Employee employee);
+    public boolean createEmployee(Employee employee);
     public Employee readEmployee(String E_ID);
-    public void updateEmployee(Employee employee);
-    public void deleteEmployee(String E_ID);
+    public boolean updateEmployee(Employee employee);
+    public boolean deleteEmployee(String E_ID);
     public boolean userLoginValidation(String E_ID, String password);
 }

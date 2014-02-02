@@ -15,11 +15,13 @@ import java.util.Collection;
  */
 public interface SavingsDAO {
     public void createSavingsAccount(int C_ID);
-    public Savings readSavingsAccount(int C_ID);
-    public void updateSavingsAccount(int C_ID);
-    public void deleteSavingsAccount (int C_ID);
+    public boolean readSavingsAccountByCustomer(int C_ID);
+    public boolean readSavingsAccountByAccNum(int AccNum);
+    public Savings getSavingsAccountByAccNum(int AccNum);
+    public boolean updateSavingsAccount(Savings savingsAccount);
+    public boolean deleteSavingsAccount (int AccNum);
     public void withdraw(int C_ID,int amount);
-    public void deposit(int C_ID,int amount);
+    public boolean deposit(int C_ID,int amount);
     public int viewBalance(int C_ID);
 
     public Collection getAllSavingsAccount();

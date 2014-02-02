@@ -8,6 +8,7 @@ package com.ACME.dataAcess;
 
 import com.ACME.dataAcess.DAO.TransactionsDAO;
 import com.ACME.dataAcess.Transactions.Transactions;
+import java.sql.Connection;
 import java.util.Collection;
 
 /**
@@ -15,6 +16,10 @@ import java.util.Collection;
  * @author WEIQIANGLIANG
  */
 public class RDBTransactionsDAO implements TransactionsDAO{
+
+    RDBTransactionsDAO(Connection dbConnection) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
     @Override
     public void createTranscations(Transactions transaction) {

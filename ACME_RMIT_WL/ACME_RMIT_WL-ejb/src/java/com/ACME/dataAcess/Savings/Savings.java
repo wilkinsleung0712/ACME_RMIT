@@ -11,18 +11,18 @@ package com.ACME.dataAcess.Savings;
  * @author WEIQIANGLIANG
  */
 public class Savings {
-    private String accNum;
+    private int accNum;
     private int balance;
     private int c_id;
 
     public Savings() {
     }
 
-    public String getAccNum() {
+    public int getAccNum() {
         return accNum;
     }
 
-    public void setAccNum(String accNum) {
+    public void setAccNum(int accNum) {
         this.accNum = accNum;
     }
 
@@ -42,4 +42,15 @@ public class Savings {
         this.c_id = c_id;
     }
     
+    public boolean withDraw(int amount){
+        if(amount>balance){
+            return false;
+        }
+        this.balance-=amount;
+        return true;
+    }
+    
+    public void deposit(int amount){
+        this.balance+=amount;
+    }
 }
