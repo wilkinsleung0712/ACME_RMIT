@@ -98,11 +98,17 @@ public class Main {
                
             }
             if (menuSelection == 3) {
+                accountCollections= savingsBean.getAllSavingsAccount();
+                printCollection(accountCollections,"NO SAVINGS ACCOUNTS RECORDS ON ACME_BANK_SAVINGS DATABASE. ","RECORDS ON ACME_BANK_CUSTOMER DATABASE: ");
                 
+              
                 
             }
             if (menuSelection == 4) {
+                accountCollections= savingsBean.getAllSavingsAccount();
+                printCollection(accountCollections,"NO SAVINGS ACCOUNTS RECORDS ON ACME_BANK_SAVINGS DATABASE. ","RECORDS ON ACME_BANK_CUSTOMER DATABASE: ");
                 
+              
               
             }
             if (menuSelection == 5) {

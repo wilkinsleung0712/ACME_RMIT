@@ -103,7 +103,10 @@ public class savingsSessionBean implements savingsSessionBeanRemote {
 
     @Override
     public Collection getAllSavingsAccount() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+         
+            SavingsDAO dao=new RDBSavingsDAO(dbConnection);
+            return dao.getAllSavingsAccount();
+        
     }
 
 

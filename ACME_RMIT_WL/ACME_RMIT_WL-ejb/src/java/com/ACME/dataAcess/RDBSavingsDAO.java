@@ -24,9 +24,10 @@ import java.util.HashSet;
  */
 public class RDBSavingsDAO implements SavingsDAO{
 private  Connection dbConnection=null;
-private final String SQL_CREATE_SAVINGS="INSERT INTO ACME_BANK.SAVINGS( C_ID, BALANCE)"+ " VALUES ( ?, ?)";
+private final String SQL_CREATE_SAVINGS="INSERT INTO ACME_BANK.SAVINGS (C_ID)"+"VALUES (?)";
 private final String SQL_READ_SAVINGS="SELECT * FROM ACME_BANK.SAVINGS WHERE C_ID = ?";
 private final String SQL_READ_SAVINGS_BY_ACCNUM="SELECT * FROM ACME_BANK.SAVINGS WHERE ACCNUM = ?";
+private final String SQL_READ_SAVINGS_BY_C_ID="SELECT * FROM ACME_BANK.SAVINGS WHERE C_ID = ?";
 private final String SQL_GETALL_SAVINGS="SELECT * FROM ACME_BANK.SAVINGS";
 private final String SQL_UPDATE_SAVINGS="UPDATE ACME_BANK.SAVINGS SET ACCNUM=?, BALANCE=? WHERE ACCNUM=?";
 private final String SQL_DELETE_SAVINGS="DELTE FROM ACME_BANK.SAVINGS WHERE ACCNUM=?";
@@ -35,6 +36,7 @@ private final String SQL_SET_BALANCE="UPDATE  ACME_BANK.SAVINGS SET BALANCE=? WH
 //constraint
 private final boolean SUCCESS=true;
 private final boolean FAIL=false;
+private final int MAXIMUM_SAVINGS_ACCOUNT=2;
 
     public RDBSavingsDAO(Connection dbConnection) {
          this.dbConnection = dbConnection; 
@@ -42,15 +44,21 @@ private final boolean FAIL=false;
 
     @Override
     public void createSavingsAccount(int C_ID) {
+        int numbersOfSavingsAccount=countSavingsAccountByCId(C_ID);
         try {
-            Savings account=new Savings();
+            if(numbersOfSavingsAccount<MAXIMUM_SAVINGS_ACCOUNT){
+                Savings account=new Savings();
 
-            PreparedStatement prestmnt=dbConnection.prepareStatement(SQL_CREATE_SAVINGS);
+                 PreparedStatement prestmnt=dbConnection.prepareStatement(SQL_CREATE_SAVINGS);
 
-            prestmnt.setInt(1, account.getC_id());
-            prestmnt.setInt(2, account.getBalance());
-
-            prestmnt.executeUpdate();
+                 prestmnt.setInt(1, C_ID);
+            
+                 prestmnt.executeUpdate();
+            }else{
+                System.out.println("Could not create any more saving account on customer:  ["+C_ID+"] as it already has ["+numbersOfSavingsAccount+"]");
+          
+            }
+            
         } catch (SQLException ex) {
             System.out.println("Could not open a saving account for customer. "+C_ID);
             ex.printStackTrace();
@@ -252,6 +260,24 @@ private final boolean FAIL=false;
                 ex.printStackTrace();
          }
         return customerList;
+    }
+    
+    
+    public int countSavingsAccountByCId(int C_ID){
+        int numbersOfSavingsAccount=0;
+         try{
+               PreparedStatement prestmnt=dbConnection.prepareStatement(SQL_READ_SAVINGS_BY_C_ID);
+               prestmnt.setInt(1, C_ID);
+               ResultSet rs=prestmnt.executeQuery();
+               while(rs.next()){
+                   numbersOfSavingsAccount++;
+               }
+            }
+        catch(SQLException ex){
+            System.out.println("Could not create any more saving account on customer:  ["+C_ID+"] as it already has ["+numbersOfSavingsAccount+"]");
+            ex.printStackTrace();
+        }
+         return numbersOfSavingsAccount;
     }
    }
     
