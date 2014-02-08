@@ -38,6 +38,7 @@ public class Main {
     private static Collection<String> customerCollections;
     private static Collection<String> accountCollections;
     private static Collection<String> transactionCollections;
+    private static boolean quit=false;
 
     /**
      * @param args the command line arguments
@@ -62,13 +63,21 @@ public class Main {
             if (menuSelection == 1 ) {
                 //shoppingCart.addItemToCart(menuSelection);
                 String firstName=getUserInput("Please enter FIRST NAME:");
-               
+                if(quit){
+                    continue;
+                }
                 String lastName=getUserInput("Please enter LAST NAME:");
-
+                if(quit){
+                    continue;
+                }
                 java.sql.Date customerDOB=getUserDOB("Please enter DOB:");
- 
+                if(quit){
+                    continue;
+                }
                 String address=getUserInput("Please enter ADDRESS:");
-                 
+                 if(quit){
+                    continue;
+                }
                  
                 if(customerBean.createCustomer(firstName, lastName, customerDOB, address)){
                     System.out.println("SERVER:  "+"Customer [ FIRSTNAME="+firstName+" LASTNAME="+lastName+" DOB="+customerDOB+" ] has inserted into ACME_BANK.CUSTOMER Database successful.");
@@ -86,6 +95,9 @@ public class Main {
                 System.out.println();
                 System.out.println("Please select a Customer to open savings account: ");
                 int customer_C_ID=getSelection(0,99);
+                if(quit){
+                    continue;
+                }
                 if(savingsBean.createSavingsAccount(customer_C_ID)){
                     System.out.println("SERVER:  "+"Savings Account on Customer [ CUSTOMER ID="+customer_C_ID+" ] has inserted into ACME_BANK.CUSTOMER Database successful.");
                 }else{
@@ -100,18 +112,89 @@ public class Main {
             if (menuSelection == 3) {
                 accountCollections= savingsBean.getAllSavingsAccount();
                 printCollection(accountCollections,"NO SAVINGS ACCOUNTS RECORDS ON ACME_BANK_SAVINGS DATABASE. ","RECORDS ON ACME_BANK_CUSTOMER DATABASE: ");
+                //printTransactionsByAccount(accountCollections,"NO TRANSACTIONS HISTORY .","TRANSACTIONS HISTROY TABLE");
+                 
+                System.out.println();
+                System.out.println("Please select a customer : ");
+                int C_ID=getSelection(0,99);
+                if(quit){
+                    break;
+                }
+                System.out.println("Please select an account  :[Customer ID="+C_ID+"]");
+                printCollection(savingsBean.getSavingsAccountByCId(C_ID),"NO SAVINGS ACCOUNTS RECORDS ON ACME_BANK_SAVINGS DATABASE. ","AccNumber \t Balance \t Cutomer_ID \t Type");
                 
+                System.out.println();
+                System.out.println("Please select an Account : ");
+                int AccNum=getSelection(0,99); 
+                if(quit){
+                    break;
+                }
+                System.out.println();
+                
+                System.out.println("Please enter amount to deposit on Account : ");
+                int amount=getSelection(0,10000); 
+                if(quit){
+                    break;
+                }
+                transactionCollections=transactionsBean.getTranscationsByAccNum(AccNum);
+                printCollection(transactionCollections,"NO HISTORY TRANSACTIONS RECORDS ON ACME_BANK_TRANSACTIONS DATABASE. ","RECORDS ON ACME_BANK_TRANSACTIONS DATABASE: ");
+                
+                
+                System.out.println("Please insert an amount to deposit from the selected account : ");
+                //int amount=getAmount(0,100000);
+                
+                boolean result=savingsBean.deposit(AccNum, amount);
+                if(result){
+                    System.out.println("SERVER:  "+"Savings Account on Customer [ CUSTOMER ID="+C_ID+" with AMOUNT="+amount+" ] has perform DEPOSITE on ACME_BANK.SAVINGS Database successful.");
+                }else{
+                    System.out.println("SERVER:  "+"Savings Account on Customer [ CUSTOMER ID="+C_ID+" with AMOUNT="+amount+" ] has perform DEPOSITE on ACME_BANK.SAVINGS Database failure.");
+                }
               
                 
             }
             if (menuSelection == 4) {
                 accountCollections= savingsBean.getAllSavingsAccount();
                 printCollection(accountCollections,"NO SAVINGS ACCOUNTS RECORDS ON ACME_BANK_SAVINGS DATABASE. ","RECORDS ON ACME_BANK_CUSTOMER DATABASE: ");
+                //printTransactionsByAccount(accountCollections,"NO TRANSACTIONS HISTORY .","TRANSACTIONS HISTROY TABLE");
+                System.out.println();
+                System.out.println("Please select a customer : ");
+                int C_ID=getSelection(0,99);
+                if(quit){
+                    break;
+                }
                 
+                System.out.println("Please select an account  :[Customer ID="+C_ID+"]");
+                printCollection(savingsBean.getSavingsAccountByCId(C_ID),"NO SAVINGS ACCOUNTS RECORDS ON ACME_BANK_SAVINGS DATABASE. ","RECORDS ON ACME_BANK_CUSTOMER DATABASE: ");
+                System.out.println();
+                System.out.println("Please select an Account : ");
+                int AccNum=getSelection(0,99); 
+                if(quit){
+                    break;
+                }
+                System.out.println();
+                System.out.println("Please enter amount to withdraw on Account : ");
+                int amount=getSelection(0,10000); 
+                if(quit){
+                    break;
+                }
+                
+                transactionCollections=transactionsBean.getTranscationsByAccNum(AccNum);
+                printCollection(transactionCollections,"NO HISTORY TRANSACTIONS RECORDS ON ACME_BANK_TRANSACTIONS DATABASE. ","RECORDS ON ACME_BANK_TRANSACTIONS DATABASE: ");
+                
+                
+                boolean result=savingsBean.withdraw(AccNum, amount);
+                if(result){
+                    System.out.println("SERVER:  "+"Savings Account on Customer [ CUSTOMER ID="+C_ID+" with AMOUNT="+amount+" ] has perform DEPOSITE on ACME_BANK.SAVINGS Database successful.");
+                }else{
+                    System.out.println("SERVER:  "+"Savings Account on Customer [ CUSTOMER ID="+C_ID+" with AMOUNT="+amount+" ] has perform DEPOSITE on ACME_BANK.SAVINGS Database failure.");
+                }
+              
               
               
             }
             if (menuSelection == 5) {
+               accountCollections=savingsBean.getAllSavingsAccount();
+               printTransactionsByAccount(accountCollections,"NO SAVINGS ACCOUNT RECORDS ON ACME_BANK_SAVINGS DATABASE. ","RECORDS ON ACME_BANK_SAVINGS DATABASE: ");
                
             
             }
@@ -124,24 +207,25 @@ public class Main {
     /*
     print out all transactions by an account
     */
-    private static void printEachCollection(Collection<String> collection,String stringToPrintIfEmpty,String stringToPrintIfNOTEmpty){
-         System.out.println("------------------------------------------------------");
+    private static void printTransactionsByAccount(Collection<String> collection,String stringToPrintIfEmpty,String stringToPrintIfNOTEmpty){
+         //System.out.println("------------------------------------------------------");
          if(collection.isEmpty()){
                     System.out.println(stringToPrintIfEmpty);
                 }else{
                    System.out.println(stringToPrintIfNOTEmpty);
-                   /*
+                   
                    for(String s:collection){
                        
                         System.out.println("===========================================================");
                         System.out.println(s);
                         String[] parts = s.split("\t");
-                        Collection<String> transactions=transactionsBean.getTranscationsByT_ID(parts[1]);
-                         for(String ss:transactions){
-                             System.out.println(ss);
-                         }
-                        System.out.println("===========================================================");
-                     } */
+                        //Collection<String> transactions=transactionsBean.getTranscationsByAccNum(Integer.valueOf(parts[0]));
+                         //for(String ss:transactions){
+                           //  System.out.println(ss);
+                         //}
+                    }
+                    System.out.println("===========================================================");
+                    
                 }
         System.out.println("------------------------------------------------------");
     }
@@ -164,6 +248,7 @@ public class Main {
     
     
     private static int getAmount( int MINIMUN_SELECTION,int MAXIMUM_SELECTION) {
+        quit=false;
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         String input = "";
         int output = 0;
@@ -175,6 +260,10 @@ public class Main {
                     if (input.length() > 5) {
                          continue;
                      }
+                    if(input.equalsIgnoreCase("Q")){
+                        quit=true;
+                        break;
+                    }
                     output = Integer.parseInt(input);
                     if (output < MINIMUN_SELECTION || output > MAXIMUM_SELECTION) {
                         System.out.println("Please only select from range: "+MINIMUN_SELECTION+" to "+MAXIMUM_SELECTION);
@@ -198,10 +287,15 @@ public class Main {
         String input = "";
         int output = -1;
         boolean validInput = false;
+        quit=false;
         do {
             
              try {
                     input = br.readLine();
+                    if(input.equalsIgnoreCase("Q")){
+                        quit=true;
+                        return 0;
+                    }
                     if (input.length() > 3) {
                          continue;
                      }
@@ -226,12 +320,16 @@ public class Main {
     private static String getUserInput(String prompt){
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         String input = "";
-        
+        quit=false;
         boolean validInput = false;
         do {
             System.out.println(prompt);
              try {
                     input = br.readLine();
+                    if(input.equalsIgnoreCase("q")){
+                        quit=true;
+                        break;
+                    }
                     if (input.trim().length() < 1) {
                          continue;
                      }

@@ -22,4 +22,5 @@ public interface savingsSessionBeanRemote {
     public boolean deposit(int C_ID,int amount);
     public int viewBalance(int C_ID);
     public Collection getAllSavingsAccount();
+    public Collection getSavingsAccountByCId(int C_ID);
 }

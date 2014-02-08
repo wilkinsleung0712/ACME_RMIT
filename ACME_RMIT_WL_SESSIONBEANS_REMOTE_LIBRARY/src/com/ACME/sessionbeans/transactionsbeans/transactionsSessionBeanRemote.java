@@ -6,6 +6,7 @@
 
 package com.ACME.sessionbeans.transactionsbeans;
 
+import java.util.Collection;
 import javax.ejb.Remote;
 
 /**
@@ -14,5 +15,9 @@ import javax.ejb.Remote;
  */
 @Remote
 public interface transactionsSessionBeanRemote {
-    
+    public boolean createTranscations(int accNum, int amount, String description, String type, boolean result);
+    public Collection getAllTranscations();
+    //public boolean updateTransactions(int T_ID);
+    public boolean deleteTransactions(int T_ID);
+    public Collection getTranscationsByAccNum(int AccNum);
 }

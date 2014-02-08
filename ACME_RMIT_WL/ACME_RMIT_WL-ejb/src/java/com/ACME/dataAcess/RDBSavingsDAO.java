@@ -38,12 +38,13 @@ private final boolean SUCCESS=true;
 private final boolean FAIL=false;
 private final int MAXIMUM_SAVINGS_ACCOUNT=2;
 
+
     public RDBSavingsDAO(Connection dbConnection) {
          this.dbConnection = dbConnection; 
     }
 
     @Override
-    public void createSavingsAccount(int C_ID) {
+    public boolean createSavingsAccount(int C_ID) {
         int numbersOfSavingsAccount=countSavingsAccountByCId(C_ID);
         try {
             if(numbersOfSavingsAccount<MAXIMUM_SAVINGS_ACCOUNT){
@@ -54,15 +55,17 @@ private final int MAXIMUM_SAVINGS_ACCOUNT=2;
                  prestmnt.setInt(1, C_ID);
             
                  prestmnt.executeUpdate();
+                 return true;
             }else{
                 System.out.println("Could not create any more saving account on customer:  ["+C_ID+"] as it already has ["+numbersOfSavingsAccount+"]");
-          
+               
             }
             
         } catch (SQLException ex) {
             System.out.println("Could not open a saving account for customer. "+C_ID);
             ex.printStackTrace();
         }
+         return false;
     }
 
     @Override
@@ -118,7 +121,7 @@ private final int MAXIMUM_SAVINGS_ACCOUNT=2;
                     ResultSet rs=prestmnt.executeQuery();
                     if(rs.next()){
                         account=new Savings();
-                        account.setAccNum(AccNum);
+                        account.setAccNum(rs.getInt("AccNum"));
                         account.setBalance(rs.getInt("Balance"));
                         account.setC_id(rs.getInt("C_ID"));
                     }
@@ -128,6 +131,36 @@ private final int MAXIMUM_SAVINGS_ACCOUNT=2;
             ex.printStackTrace();
         }
          return account;
+    }
+    
+    
+    @Override
+    public Collection getSavingsAccountByCId(int C_ID){
+        Collection<String> savingsAccoutList=new HashSet<>();
+         try{
+             
+                 PreparedStatement prestmnt=dbConnection.prepareStatement(SQL_READ_SAVINGS_BY_C_ID);
+
+                    prestmnt.setInt(1,C_ID);
+
+                    ResultSet rs=prestmnt.executeQuery();
+                    ResultSetMetaData metaData = rs.getMetaData();
+                    int columns = metaData.getColumnCount();
+                    String data="";
+                    while(rs.next()){
+                    data="";
+                    for(int i=1;i<=columns;i++){
+                       data+=rs.getObject(i).toString()+"\t";
+                    }
+                    savingsAccoutList.add(data);
+                }
+                    
+                    
+        }catch(SQLException ex){
+            System.out.println("Error find a saving account for customer. "+C_ID);
+            ex.printStackTrace();
+        }
+         return savingsAccoutList;
     }
     
     @Override
@@ -165,7 +198,8 @@ private final int MAXIMUM_SAVINGS_ACCOUNT=2;
     }
 
     @Override
-    public void withdraw(int AccNum, int amount) {
+    public boolean withdraw(int AccNum, int amount) {
+        String typeOfOperation="Withdraw";
         boolean withdrawflag=FAIL;
         String description="AccNum: ["+AccNum+"]"+" withdrawed "+amount+" on "+System.currentTimeMillis()+" Result: ";
         try{
@@ -176,23 +210,26 @@ private final int MAXIMUM_SAVINGS_ACCOUNT=2;
                prestmnt.setInt(1, account.getBalance());
                prestmnt.setInt(2, account.getAccNum());
                prestmnt.executeUpdate();
-               
+               return withdrawflag;
            }else{
                System.out.println("Insufficient fund on Account. "+AccNum);
+               return withdrawflag;
            }
         }catch(Exception ex){
             System.out.println("Could not withdraw on Account. "+AccNum);
             ex.printStackTrace();
+            return withdrawflag;
         }finally{
             TransactionsDAO transaction=new RDBTransactionsDAO(dbConnection);
             description+=String.valueOf(withdrawflag);
-           // transaction.createTranscations(new Transactions(C_ID,accNum,amount,description));
+            transaction.createTranscations(new Transactions(AccNum,amount,description,typeOfOperation,withdrawflag));
         }
     }
 
     @Override
     public boolean deposit(int AccNum, int amount) {
-        boolean deposit=FAIL;
+         String typeOfOperation="Deposit";
+        boolean isDeposited=FAIL;
         String description=" AccNum: ["+AccNum+"]"+" deposit "+amount+" on "+System.currentTimeMillis()+" Success: ";
         try{
             if(readSavingsAccountByAccNum(AccNum)){
@@ -202,18 +239,18 @@ private final int MAXIMUM_SAVINGS_ACCOUNT=2;
                prestmnt.setInt(1, account.getBalance());
                prestmnt.setInt(2, account.getAccNum());
                prestmnt.executeUpdate();
-               deposit=SUCCESS;
-               return deposit;
+               isDeposited=SUCCESS;
+               return isDeposited;
             }
         }catch(Exception ex){
             System.out.println("Could not deposit on Account. "+AccNum);
             ex.printStackTrace();
         }finally{
             RDBTransactionsDAO transaction=new RDBTransactionsDAO(dbConnection);
-            description+=String.valueOf(deposit);
-           // transaction.createTranscations(new Transactions(C_ID,accNum,amount,description));
+            description+=String.valueOf(isDeposited);
+            transaction.createTranscations(new Transactions(AccNum,amount,description,typeOfOperation,isDeposited));
         }
-         return deposit;
+         return isDeposited;
     }
 
     @Override
@@ -239,7 +276,7 @@ private final int MAXIMUM_SAVINGS_ACCOUNT=2;
 
     @Override
     public Collection getAllSavingsAccount() {
-        Collection<String> customerList=new HashSet<>();
+        Collection<String> savingsAccoutList=new HashSet<>();
         try {
                 PreparedStatement prestmnt=dbConnection.prepareStatement(SQL_GETALL_SAVINGS);
                 ResultSet rs=prestmnt.executeQuery();
@@ -251,7 +288,7 @@ private final int MAXIMUM_SAVINGS_ACCOUNT=2;
                     for(int i=1;i<=columns;i++){
                        data+=rs.getObject(i).toString()+"\t";
                     }
-                    customerList.add(data);
+                    savingsAccoutList.add(data);
                     
                 }
        
@@ -259,7 +296,7 @@ private final int MAXIMUM_SAVINGS_ACCOUNT=2;
                 System.out.println("Could not get all  savings account.");
                 ex.printStackTrace();
          }
-        return customerList;
+        return savingsAccoutList;
     }
     
     

@@ -25,13 +25,15 @@ import javax.sql.DataSource;
  */
 @Stateless
 public class customerSessionBean implements customerSessionBeanRemote {
+   
 
     // Add business logic below. (Right-click in editor and choose
     // "Insert Code > Add Business Method")
     @Resource(lookup="jdbc/mysqlDatasource")
     private DataSource dataSource;
     private Connection dbConnection;
-
+   
+    //private ACMEMessageBean msgbean;
     
     public customerSessionBean() {
         
@@ -48,6 +50,7 @@ public class customerSessionBean implements customerSessionBeanRemote {
     public void init(){
         try {
             this.dbConnection=this.dataSource.getConnection();
+            
         } catch (SQLException ex) {
             System.out.println("DataBase connection cannot be initialized.");
             ex.printStackTrace();
@@ -78,6 +81,10 @@ public class customerSessionBean implements customerSessionBeanRemote {
             customer.setFirstname(firstname);
             //calling the create function in the dataAccess DAO (e.g. RDBCustomerDAO)
             dao.createCustomer(customer);
+            
+            
+           // sendJMSMessageToMyACME_BANK_Queue("new Customer is comming");
+          //  msgbean.sendJMSMessageToQueue("asdasdssasd");
             return true;
             
         } catch (Exception e) {
@@ -160,5 +167,5 @@ public class customerSessionBean implements customerSessionBeanRemote {
         CustomerDAO dao=new RDBCustomerDAO(dbConnection);
         return dao.userLoginValidation(C_ID, Password);
     }
-    
-}
+
+    }

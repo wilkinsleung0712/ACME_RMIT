@@ -14,9 +14,9 @@ import java.util.Collection;
  * @author WEIQIANGLIANG
  */
 public interface TransactionsDAO {
-    public void createTranscations(Transactions transaction);
+    public boolean createTranscations(Transactions transaction);
     public Collection getAllTranscations();
-    public void updateTransactions(String T_ID);
-    public void deleteTransactions(String T_ID);
-    public Collection getTranscationsByT_ID(String T_ID);
+    public boolean updateTransactions(Transactions transaction);
+    public boolean deleteTransactions(int T_ID);
+    public Collection getTranscationsByAccNum(int T_ID);
 }
